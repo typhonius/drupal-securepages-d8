@@ -16,7 +16,7 @@ function securepages_help($section) {
  * Implementation of hook_init()
  */
 function securepages_init() {
-  $path = drupal_get_path_alias($_GET['q']);
+  $path = $_GET['q'];
   $page_match = securepages_match($path);
 
   if ($page_match && !$_SERVER['HTTPS']) {
@@ -67,6 +67,7 @@ function securepages_form_alter($form_id, &$form) {
     else {
       $path = ($path[0] == '/' ? substr($path, 1) : $path);
     }
+    $path = drupal_get_normal_path($path);
     $query = drupal_query_string_encode($query);
     $page_match = securepages_match($path);
     if ($page_match && !$_SERVER['HTTPS']) {
