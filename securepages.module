@@ -1,0 +1,88 @@
+<?php
+// $Id$
+
+/**
+ * Implementation of hook_help()
+ */
+function securepages_help($section) {
+  switch ($section) {
+    case 'admin/modules#description':
+      return t('Set which pages are always going to be used in secure mode (SSL)');
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_init()
+ */
+function securepages_init() {
+  $secure = variable_get('securepages_secure', 1);
+  $pages = variable_get('securepages_pages', "node/*/edit\nuser/*\nadmin*");
+
+  if ($pages) {
+    $path = drupal_get_path_alias($_GET['q']);
+    $regexp = '/^('. preg_replace(array('/(\r\n?|\n)/', '/\\\\\*/', '/(^|\|)\\\\<front\\\\>($|\|)/'), array('|', '.*', '\1'. preg_quote(variable_get('site_frontpage', 'node'), '/') .'\2'), preg_quote($pages, '/')) .')$/';
+    $page_match = !($secure xor preg_match($regexp, $path));
+  }
+  else {
+    return;
+  }
+
+  if ($page_match && $_SESSION['securepages']) {
+    $_POST = $_SESSION['securepages']['post'];
+  }
+  unset($_SESSION['securepages']);
+
+  if ($page_match && !$_SERVER['HTTPS']) {
+    securepages_goto(TRUE);
+  }
+  elseif (!$page_match && $_SERVER['HTTPS'] && variable_get('securepages_switch', FALSE)) {
+    securepages_goto(FALSE);
+  }
+}
+
+/**
+ * Implementation of hook_settings()
+ */
+function securepages_settings() {
+  $output.= form_checkbox(t('Switch back to http pages when there are no matches'), 'securepages_switch', TRUE, variable_get('securepages_switch', FALSE));
+  $output.= form_radios(t('Pages which will be be secure'), 'securepages_secure', variable_get('securepages_secure', 1), array(t('Show on every page except the listed pages.'), t('Show on only the listed pages.')));
+  $output .= form_textarea(t('Pages'), 'securepages_pages', variable_get('securepages_pages', "node/*/edit\nuser/*\nadmin*"), 40, 5, t("Enter one page per line as Drupal paths. The '*' character is a wildcard. Example paths are '<em>blog</em>' for the blog page and '<em>blog/*</em>' for every personal blog. '<em>&lt;front&gt;</em>' is the front page."));
+  return $output;
+}
+
+/**
+ * securepage_goto()
+ *
+ * Redirects the current page to the secure or insecure version.
+ *
+ * @param $secure
+ *  Determine which version of the set to move to.
+ */
+function securepages_goto($secure) {
+  $destination = $_GET['q'];
+  foreach ($_GET as $key => $value) {
+    if ($key != 'q') {
+      $query[] = "{$key}=". urlencode($value);
+    }
+  }
+
+  $query = is_array($query) ? implode('&', $query) : NULL;
+  $url = url($destination, $query, NULL, TRUE);
+
+  if ($secure) {
+    $url = preg_replace('/^http:\/\//i', 'https://', $url);
+  }
+  else {
+    $url = preg_replace('/^https:\/\//i', 'http://', $url);
+  }
+
+  if ($_REQUEST['edit']) {
+    $_SESSION['securepages']['post'] = $_POST;
+  }
+
+  module_invoke_all('exit', $url);
+
+  header('Location: '. $url);
+  exit();
+}
