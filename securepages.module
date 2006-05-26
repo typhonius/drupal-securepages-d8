@@ -99,7 +99,7 @@ function securepages_goto($secure) {
  * securepages_get_destination()
  */
 function securepages_get_destination($path, $query, $secure) {
-  $url = url($path, $query, NULL, TRUE);
+  $url = url($path, $query == '' ? NULL : $query, NULL, TRUE);
 
   if ($secure) {
     $url = preg_replace('/^http:\/\//i', 'https://', $url);
