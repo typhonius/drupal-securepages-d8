@@ -16,27 +16,13 @@ function securepages_help($section) {
  * Implementation of hook_init()
  */
 function securepages_init() {
-  $secure = variable_get('securepages_secure', 1);
-  $pages = variable_get('securepages_pages', "node/*/edit\nuser/*\nadmin*");
-
-  if ($pages) {
-    $path = drupal_get_path_alias($_GET['q']);
-    $regexp = '/^('. preg_replace(array('/(\r\n?|\n)/', '/\\\\\*/', '/(^|\|)\\\\<front\\\\>($|\|)/'), array('|', '.*', '\1'. preg_quote(variable_get('site_frontpage', 'node'), '/') .'\2'), preg_quote($pages, '/')) .')$/';
-    $page_match = !($secure xor preg_match($regexp, $path));
-  }
-  else {
-    return;
-  }
-
-  if ($page_match && $_SESSION['securepages']) {
-    $_POST = $_SESSION['securepages']['post'];
-  }
-  unset($_SESSION['securepages']);
+  $path = drupal_get_path_alias($_GET['q']);
+  $page_match = securepages_match($path);
 
   if ($page_match && !$_SERVER['HTTPS']) {
     securepages_goto(TRUE);
   }
-  elseif (!$page_match && $_SERVER['HTTPS'] && variable_get('securepages_switch', FALSE)) {
+  elseif ($page_match === FALSE && $_SERVER['HTTPS'] && variable_get('securepages_switch', FALSE)) {
     securepages_goto(FALSE);
   }
 }
@@ -45,10 +31,51 @@ function securepages_init() {
  * Implementation of hook_settings()
  */
 function securepages_settings() {
-  $output.= form_checkbox(t('Switch back to http pages when there are no matches'), 'securepages_switch', TRUE, variable_get('securepages_switch', FALSE));
-  $output.= form_radios(t('Pages which will be be secure'), 'securepages_secure', variable_get('securepages_secure', 1), array(t('Show on every page except the listed pages.'), t('Show on only the listed pages.')));
-  $output .= form_textarea(t('Pages'), 'securepages_pages', variable_get('securepages_pages', "node/*/edit\nuser/*\nadmin*"), 40, 5, t("Enter one page per line as Drupal paths. The '*' character is a wildcard. Example paths are '<em>blog</em>' for the blog page and '<em>blog/*</em>' for every personal blog. '<em>&lt;front&gt;</em>' is the front page."));
-  return $output;
+  $form['securepages_switch'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Switch back to http pages when there are no matches'),
+    '#return_value' => TRUE,
+    '#default_value' => variable_get('securepages_switch', FALSE),
+  );
+  $form['securepages_secure'] = array(
+    '#type' => 'radios',
+    '#title' => t('Pages which will be be secure'),
+    '#default_value' => variable_get('securepages_secure', 1),
+    '#options' => array(t('Show on every page except the listed pages.'), t('Show on only the listed pages.')),
+  );
+  $form['securepages_pages'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Pages'),
+    '#default_value' => variable_get('securepages_pages', "node/add*\nnode/*/edit\nuser/*\nadmin*"),
+    '#cols' => 40,
+    '#rows' => 5,
+    '#description' => t("Enter one page per line as Drupal paths. The '*' character is a wildcard. Example paths are '<em>blog</em>' for the blog page and '<em>blog/*</em>' for every personal blog. '<em>&lt;front&gt;</em>' is the front page."),
+  );
+  return $form;
+}
+
+/**
+ * Implementation of hook_form_alter()
+ */
+function securepages_form_alter($form_id, &$form) {
+  if ($form['#action']) {
+    extract(parse_url($form['#action']));
+    parse_str($query, $query);
+    if (isset($query['q'])) {
+      $path = $query['q'];
+    }
+    else {
+      $path = ($path[0] == '/' ? substr($path, 1) : $path);
+    }
+    $query = drupal_query_string_encode($query);
+    $page_match = securepages_match($path);
+    if ($page_match && !$_SERVER['HTTPS']) {
+      $form['#action'] = securepages_get_destination($path, $query, TRUE);
+    }
+    elseif ($page_match === FALSE && $_SERVER['HTTPS'] && variable_get('securepages_switch', FALSE)) {
+      $form['#action'] = securepages_get_destination($path, $query, FALSE);
+    }
+  }
 }
 
 /**
@@ -60,15 +87,18 @@ function securepages_settings() {
  *  Determine which version of the set to move to.
  */
 function securepages_goto($secure) {
-  $destination = $_GET['q'];
-  foreach ($_GET as $key => $value) {
-    if ($key != 'q') {
-      $query[] = "{$key}=". urlencode($value);
-    }
-  }
+  $path = drupal_get_path_alias($_GET['q']);
+  $query = drupal_query_string_encode($_GET, array('q'));
+  $url = securepages_get_destination($path, $query, $secure);
 
-  $query = is_array($query) ? implode('&', $query) : NULL;
-  $url = url($destination, $query, NULL, TRUE);
+  drupal_goto($url);
+}
+
+/**
+ * securepages_get_destination()
+ */
+function securepages_get_destination($path, $query, $secure) {
+  $url = url($path, $query, NULL, TRUE);
 
   if ($secure) {
     $url = preg_replace('/^http:\/\//i', 'https://', $url);
@@ -77,12 +107,21 @@ function securepages_goto($secure) {
     $url = preg_replace('/^https:\/\//i', 'http://', $url);
   }
 
-  if ($_REQUEST['edit']) {
-    $_SESSION['securepages']['post'] = $_POST;
+  return $url;
+}
+
+/**
+ * securepages_match()
+ */
+function securepages_match($path) {
+  $secure = variable_get('securepages_secure', 1);
+  $pages = variable_get('securepages_pages', "node/add*\nnode/*/edit\nuser/*\nadmin*");
+
+  if ($pages) {
+    $regexp = '/^('. preg_replace(array('/(\r\n?|\n)/', '/\\\\\*/', '/(^|\|)\\\\<front\\\\>($|\|)/'), array('|', '.*', '\1'. preg_quote(variable_get('site_frontpage', 'node'), '/') .'\2'), preg_quote($pages, '/')) .')$/';
+    return !($secure xor preg_match($regexp, $path));
   }
-
-  module_invoke_all('exit', $url);
-
-  header('Location: '. $url);
-  exit();
+  else {
+    return;
+  }
 }
