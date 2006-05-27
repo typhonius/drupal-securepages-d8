@@ -80,6 +80,23 @@ function securepages_form_alter($form_id, &$form) {
 }
 
 /**
+ * Implementation of hook_link_alter()
+ */
+function securepages_link_alter(&$node, &$links) {
+  foreach ($links as $module => $link) {
+    if ($link['#href']) {
+      $page_match = securepages_match($link['#href']);
+      if ($page_match && !$_SERVER['HTTPS']) {
+        $links[$module]['#href'] = securepages_get_destination($link['#href'], NULL, TRUE);
+      }
+      elseif ($page_match === FALSE && $_SERVER['HTTPS'] && variable_get('securepages_switch', FALSE)) {
+        $links[$module]['#href'] = securepages_get_destination($link['#href'], NULL, FALSE);
+      }
+    }
+  }
+}
+
+/**
  * securepage_goto()
  *
  * Redirects the current page to the secure or insecure version.
@@ -104,6 +121,20 @@ function securepages_goto($secure) {
 
 /**
  * securepages_get_destination()
+ *
+ * Build the full secure/insecure destination for the past url
+ *
+ * @param $path
+ *  path of the page that we need to get to.
+ *
+ * @param $query
+ *  The querystring of the url that the web site is going to be past to.
+ *
+ * @param $secure
+ *  determines what type of page to return.
+ *
+ * @return
+ *  valid url which is secure or insecure depending on the $secure flag.
  */
 function securepages_get_destination($path, $query, $secure) {
   if (function_exists('url')) {
@@ -127,6 +158,16 @@ function securepages_get_destination($path, $query, $secure) {
 
 /**
  * securepages_match()
+ *
+ * check the page past and see if it should be secure or insecure.
+ *
+ * @param $path
+ *  the page of the page to check.
+ *
+ * @return
+ *  0 - page should be insecure.
+ *  1 - page should be secure.
+ *  NULL - do not change page.
  */
 function securepages_match($path) {
   $secure = variable_get('securepages_secure', 1);
