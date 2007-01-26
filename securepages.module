@@ -2,17 +2,6 @@
 // $Id$
 
 /**
- * Implementation of hook_help()
- */
-function securepages_help($section) {
-  switch ($section) {
-    case 'admin/modules#description':
-      return t('Set which pages are always going to be used in secure mode (SSL)');
-      break;
-  }
-}
-
-/**
  * Implementation of hook_init()
  */
 function securepages_init() {
@@ -35,6 +24,25 @@ function securepages_init() {
   if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {
     $base_url = str_replace('http://', 'https://', $base_url);
   }
+}
+
+/**
+ * Implementation of hook_menu()
+ */
+function securepages_menu($may_cache) {
+  $items = array();
+  if ($may_cache) {
+    $items[] = array(
+      'path' => 'admin/settings/securepages',
+      'title' => t('Secure Pages'),
+      'description' => t('Configure which pages are and are not to be viewed in SSL'),
+      'callback' => 'drupal_get_form',
+      'callback arguments' => 'securepages_settings',
+      'access' => user_access('administer site configuration'),
+      'type' => MENU_NORMAL_ITEM,
+    );
+  }
+  return $items;
 }
 
 /**
@@ -61,7 +69,7 @@ function securepages_settings() {
     '#rows' => 5,
     '#description' => t("Enter one page per line as Drupal paths. The '*' character is a wildcard. Example paths are '<em>blog</em>' for the blog page and '<em>blog/*</em>' for every personal blog. '<em>&lt;front&gt;</em>' is the front page."),
   );
-  return $form;
+  return system_settings_form($form);
 }
 
 /**

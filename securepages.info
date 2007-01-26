@@ -1,0 +1,4 @@
+; $Id$
+name = Secure Pages
+description = "Set which pages are always going to be used in secure mode (SSL)"
+version = "$Name$"
