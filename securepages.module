@@ -67,7 +67,7 @@ function securepages_settings() {
     '#default_value' => variable_get('securepages_enable', 0),
     '#options' => array(t('Disabled'), t('Enabled')),
     '#disabled' => !securepages_test(),
-    '#description' => t('To start using secure pages this setting must be enabled. This setting will only be able to changed when the web server has been configured for SSL.<br />If this test has failed then go <a href="!url">here</a>', array('!url' => preg_replace(';^http://;i', 'https://', url($_GET['q'], NULL, NULL, TRUE)))),
+    '#description' => t('To start using secure pages this setting must be enabled. This setting will only be able to changed when the web server has been configured for SSL.<br />If this test has failed then go <a href="!url">here</a>', array('!url' => preg_replace(';^http://;i', 'https://', url($_GET['q'], array('absolute' => TRUE))))),
   );
   $form['securepages_switch'] = array(
     '#type' => 'checkbox',
@@ -103,7 +103,7 @@ function securepages_settings() {
 /**
  * Implementation of hook_form_alter()
  */
-function securepages_form_alter($form_id, &$form) {
+function securepages_form_alter(&$form, &$form_state, $form_id) {
   if ($form['#action']) {
     extract(parse_url($form['#action']));
     parse_str($query, $query);
@@ -196,7 +196,7 @@ function securepages_goto($secure) {
 function securepages_get_destination($path, $query, $secure) {
   if (function_exists('url')) {
     // if url() exists then use that as it will more robust.
-    $url = url($path, $query == '' ? NULL : $query, NULL, TRUE);
+    $url = url($path, array('query' => $query == '' ? NULL : $query, 'absolute' => TRUE));
   }
   else {
     // This should convert to the current page ok.
@@ -270,7 +270,7 @@ function securepages_test() {
   if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {
     return TRUE;
   }
-  $url = 'https://'. preg_replace(';^http[s]?://;s', '', url('admin/settings/securepages/test', NULL, NULL, TRUE));
+  $url = 'https://'. preg_replace(';^http[s]?://;s', '', url('admin/settings/securepages/test', array('absolute' => TRUE)));
 
   $response = drupal_http_request($url);
 
