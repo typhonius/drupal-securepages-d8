@@ -7,7 +7,7 @@
 function securepages_boot() {
   global $base_url;
 
-  $path = $_GET['q'];
+  $path = isset($_GET['q']) ? $_GET['q'] : '';
   if ($path == 'admin/settings/securepages/test') {
     if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']) {
       header('HTTP/1.1 200 OK');
@@ -29,7 +29,7 @@ function securepages_boot() {
   elseif ($page_match && !$_SERVER['HTTPS']) {
     securepages_goto(TRUE);
   }
-  elseif ($page_match === 0 && $_SERVER['HTTPS'] && variable_get('securepages_switch', FALSE)) {
+  elseif ($page_match === 0 && isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] && variable_get('securepages_switch', FALSE)) {
     securepages_goto(FALSE);
   }
 
@@ -245,7 +245,7 @@ function securepages_match($path) {
   if ($ignore) {
     $regexp = '/^('. preg_replace(array('/(\r\n?|\n)/', '/\\\\\*/', '/(^|\|)\\\\<front\\\\>($|\|)/'), array('|', '.*', '\1'. preg_quote(variable_get('site_frontpage', 'node'), '/') .'\2'), preg_quote($ignore, '/')) .')$/';
     if (preg_match($regexp, $path)) {
-      if ($_SERVER['HTTPS'] == 'on') {
+      if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {
         return 1;
       }
       else {
