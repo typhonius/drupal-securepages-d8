@@ -1,15 +1,19 @@
 <?php
 // $Id$
+/**
+ * @file
+ * Provides installation details for Secure Pages
+ */
 
 /**
- * Implementation of hook_enable()
+ * Implementation of hook_enable().
  */
 function securepages_enable() {
-  drupal_set_message(t('Secure pages needs to be enabled on !setting', array('!settings' => l(t('admin/settings/securepages'), 'admin/settings/securepages'))));
+  drupal_set_message(t('Secure pages needs to be enabled on !settings', array('!settings' => l(t('admin/settings/securepages'), 'admin/settings/securepages'))));
 }
 
 /**
- * Implementation of hook_uninstall()
+ * Implementation of hook_uninstall().
  */
 function securepages_uninstall() {
   variable_del('securepages_enable');
@@ -20,7 +24,7 @@ function securepages_uninstall() {
 }
 
 /**
- * Implementation of hook_update_n()
+ * Implementation of hook_update_n().
  */
 function securepages_update_1() {
   variable_set('securepages_enable', 1);
