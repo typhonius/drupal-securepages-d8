@@ -148,7 +148,7 @@ function securepages_form_alter(&$form, &$form_state, $form_id) {
     return;
   }
 
-  if ($form['#action']) {
+  if (isset($form['#action'])) {
     extract(parse_url($form['#action']));
     if (isset($query)) {
       parse_str($query, $query);
