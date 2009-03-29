@@ -304,10 +304,6 @@ function securepages_url($path = NULL, $options = array()) {
     $options['external'] = ($colonpos !== FALSE && !preg_match('![/?#]!', substr($path, 0, $colonpos)) && filter_xss_bad_protocol($path, FALSE) == check_plain($path));
   }
 
-  // May need language dependent rewriting if language.inc is present.
-  if (function_exists('language_url_rewrite')) {
-    language_url_rewrite($path, $options);
-  }
   if ($options['fragment']) {
     $options['fragment'] = '#'. $options['fragment'];
   }
