@@ -187,6 +187,9 @@ function securepages_goto($secure) {
     bootstrap_invoke_all('exit');
   }
   header('Location: '. $url);
+  
+  // Make sure the cache is clear so that the next page will not pick up a cached version.
+  cache_clear_all($base_root . request_uri(), 'cache_page');
   exit();
 }
 
