@@ -91,7 +91,7 @@ function securepages_form_alter(&$form, &$form_state, $form_id) {
     return;
   }
 
-  if (isset($form['#action'])) {
+  if (isset($form['#action']) && securepages_can_alter_url($form['#action'])) {
     extract(parse_url($form['#action']));
     if (isset($query)) {
       parse_str($query, $query);
@@ -126,7 +126,7 @@ function securepages_link_alter(&$links, &$node) {
     return;
   }
   foreach ($links as $module => $link) {
-    if ($link['href']) {
+    if ($link['href'] && securepages_can_alter_url($link['href'])) {
       $page_match = securepages_match($link['href']);
       if ($page_match && !securepages_is_secure()) {
         $links[$module]['href'] = securepages_url($link['href'], array('secure' => TRUE));
@@ -204,17 +204,6 @@ function securepages_goto($secure) {
  *  NULL - do not change page.
  */
 function securepages_match($path) {
-  /**
-   * Check to see if the current menu item has a preference and ignore the
-   * secure pages settings
-   */
-  if (function_exists('menu_get_item')) {
-    $item = menu_get_item($path);
-    if (isset($item['secure'])) {
-      return $item['secure'];
-    }
-  }
-
   /**
    * Check to see if the page matches the current settings
    */
@@ -454,3 +443,27 @@ function securepages_urlencode($text) {
   }
 }
 
+/**
+ * Check the url and make sure that it is a url that you can alter this url.
+ */
+function securepages_can_alter_url($url) {
+  global $base_path;
+  
+  extract(parse_url($url));
+  
+  // If there is no scheme then it is a relative url and can be altered
+  if (!isset($scheme) && $base_path == '/') {
+    return TRUE;
+  }
+  
+  // If the host names are not the same then don't allow altering of the path.
+  if (strtolower($host) != strtolower($_SERVER['HTTP_HOST'])) {
+    return FALSE;
+  }
+  
+  if (strlen($base_path) > 1 && substr($base_url, -1) != substr($path, 1, strlen($base_path))) {
+    return FALSE;
+  }
+  
+  return TRUE;
+}
