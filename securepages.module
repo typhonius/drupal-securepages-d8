@@ -456,7 +456,7 @@ function securepages_can_alter_url($url) {
   }
   
   // If the host names are not the same then don't allow altering of the path.
-  if (strtolower($host) != strtolower($_SERVER['HTTP_HOST'])) {
+  if (isset($host) && strtolower($host) != strtolower($_SERVER['HTTP_HOST'])) {
     return FALSE;
   }
   
