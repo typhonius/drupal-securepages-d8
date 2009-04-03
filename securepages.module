@@ -446,7 +446,7 @@ function securepages_urlencode($text) {
  * Check the url and make sure that it is a url that you can alter this url.
  */
 function securepages_can_alter_url($url) {
-  global $base_path;
+  global $base_path, $base_url;
   
   extract(parse_url($url));
   
