@@ -171,6 +171,8 @@ function securepages_redirect() {
  *  Determine which version of the set to move to.
  */
 function securepages_goto($secure) {
+  global $base_root;
+  
   $_SESSION['securepages_redirect'] = TRUE;
   $path = !empty($_REQUEST['q']) ? $_REQUEST['q'] : '';
   $query = count($_GET) > 1 ? securepages_get_query($_GET) : NULL;
