@@ -225,7 +225,12 @@ function securepages_match($path) {
   }
   if ($pages) {
     $regexp = '/^('. preg_replace(array('/(\r\n?|\n)/', '/\\\\\*/', '/(^|\|)\\\\<front\\\\>($|\|)/'), array('|', '.*', '\1'. preg_quote(variable_get('site_frontpage', 'node'), '/') .'\2'), preg_quote($pages, '/')) .')$/';
-    return !($secure xor preg_match($regexp, $path)) ? 1 : 0;
+    $result = preg_match($regexp, $path);
+    if (function_exists('drupal_get_path_alias')) {
+      $path_alias = drupal_get_path_alias($path);
+      $result |= preg_match($regexp, $path_alias);
+    }
+    return !($secure xor $result) ? 1 : 0;
   }
   else {
     return;
