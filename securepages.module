@@ -22,6 +22,7 @@ function securepages_boot() {
     }
     exit();
   }
+  
   if (!variable_get('securepages_enable', 0) || basename($_SERVER['PHP_SELF']) != 'index.php') {
     return;
   }
@@ -92,7 +93,7 @@ function securepages_form_alter(&$form, &$form_state, $form_id) {
   }
 
   if (isset($form['#action']) && securepages_can_alter_url($form['#action'])) {
-    extract(parse_url($form['#action']));
+    @extract(@parse_url($form['#action']));
     if (isset($query)) {
       parse_str($query, $query);
     }
@@ -450,7 +451,7 @@ function securepages_urlencode($text) {
 function securepages_can_alter_url($url) {
   global $base_path, $base_url;
   
-  extract(parse_url($url));
+  @extract(@parse_url($url));
   
   // If there is no scheme then it is a relative url and can be altered
   if (!isset($scheme) && $base_path == '/') {
