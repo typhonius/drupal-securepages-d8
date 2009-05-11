@@ -423,17 +423,7 @@ function securepages_baseurl($secure = TRUE) {
  * Return a querystring without the q paramter
  */
 function securepages_get_query($query) {
-  unset($query['q']);
-  $q = array();
-
-  foreach ($query as $key => $value) {
-    if (is_array($value)) {
-      $value = http_build_query(array($key => $value));
-    }
-    $q[] = securepages_urlencode($key) .'='. securepages_urlencode($value);
-  }
-
-  return implode('&', $q);
+  return trim(str_replace('q='.$query['q'], '', $_SERVER['QUERY_STRING']),'&');
 }
 
 /**
@@ -443,10 +433,10 @@ function securepages_urlencode($text) {
   if (variable_get('clean_url', '0')) {
     return str_replace(array('%2F', '%26', '%23', '//'),
                        array('/', '%2526', '%2523', '/%252F'),
-                       urlencode($text));
+                       rawurlencode($text));
   }
   else {
-    return str_replace('%2F', '/', urlencode($text));
+    return str_replace('%2F', '/', rawurlencode($text));
   }
 }
 
