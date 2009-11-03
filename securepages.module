@@ -10,8 +10,6 @@
  * Implementation of hook_boot().
  */
 function securepages_boot() {
-  global $base_url;
-
   $path = isset($_GET['q']) ? $_GET['q'] : '';
   if ($path == 'admin/build/securepages/test') {
     if (securepages_is_secure()) {
@@ -144,6 +142,7 @@ function securepages_link_alter(&$links, &$node) {
  * insecure version of the page.
  */
 function securepages_redirect() {
+  global $base_url;
   $path = isset($_GET['q']) ? $_GET['q'] : '';
   $page_match = securepages_match($path);
 
