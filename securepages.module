@@ -308,7 +308,7 @@ function securepages_url($path = NULL, $options = array()) {
     // Only call the slow filter_xss_bad_protocol if $path contains a ':' before
     // any / ? or #.
     $colonpos = strpos($path, ':');
-    $options['external'] = ($colonpos !== FALSE && !preg_match('![/?#]!', substr($path, 0, $colonpos)) && filter_xss_bad_protocol($path, FALSE) == check_plain($path));
+    $options['external'] = function_exists('filter_xss_bad_protocol') ? ($colonpos !== FALSE && !preg_match('![/?#]!', substr($path, 0, $colonpos)) && filter_xss_bad_protocol($path, FALSE) == check_plain($path)) : ($colonpos !== FALSE && !preg_match('![/?#]!', substr($path, 0, $colonpos)));
   }
 
   if ($options['fragment']) {
@@ -444,6 +444,8 @@ function securepages_urlencode($text) {
  */
 function securepages_can_alter_url($url) {
   global $base_path, $base_url;
+  
+  $path = '';
   
   @extract(@parse_url($url));
   
