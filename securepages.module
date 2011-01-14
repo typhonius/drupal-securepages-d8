@@ -155,7 +155,7 @@ function securepages_goto($secure) {
 
   // Check for the overlay.  Attempting to switch protocols during an XHR
   // isn't allowed by the browser's same-origin policy, so we must close the overlay.
-  if (isset($_GET['render']) && $_GET['render'] == 'overlay') {
+  if (isset($url['query']['render']) && $url['query']['render'] == 'overlay') {
     unset($url['query']['render']);
     overlay_close_dialog($url['path'], $url);
   }
