@@ -278,7 +278,7 @@ function securepages_can_alter_url($url) {
     return FALSE;
   }
 
-  if (strlen($base_path) > 1 && substr($base_url, -1) != substr($path, 1, strlen($base_path))) {
+  if (strlen($base_path) > 1 && substr($base_url, -1) != substr($url['path'], 1, strlen($base_path))) {
     return FALSE;
   }
 
