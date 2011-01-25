@@ -41,7 +41,7 @@ function securepages_init() {
     exit();
   }
 
-  if (variable_get('securepages_enable', 0) && basename($_SERVER['PHP_SELF']) == 'index.php') {
+  if (variable_get('securepages_enable', 0) && basename($_SERVER['PHP_SELF']) == 'index.php' && php_sapi_name() != 'cli') {
     securepages_redirect();
   }
 }
