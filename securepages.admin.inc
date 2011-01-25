@@ -5,7 +5,7 @@
  * @file
  * Provide all the administration pages
  */
- 
+
  /**
   * Implementation of hook_settings().
   */
@@ -52,6 +52,7 @@
      '#cols' => 40,
      '#rows' => 5,
      '#description' => t("Enter one page per line as Drupal paths. The '*' character is a wildcard. Example paths are '<em>blog</em>' for the main blog page and '<em>blog/*</em>' for every personal blog. '<em>&lt;front&gt;</em>' is the front page."),
+     '#wysiwyg' => FALSE,
    );
    $form['securepages_ignore'] = array(
      '#type' => 'textarea',
@@ -60,8 +61,8 @@
      '#cols' => 40,
      '#rows' => 5,
      '#description' => t("The pages listed here will be ignored and be either returned in http or https. Enter one page per line as Drupal paths. The '*' character is a wildcard. Example paths are '<em>blog</em>' for the blog page and '<em>blog/*</em>' for every personal blog. '<em>&lt;front&gt;</em>' is the front page."),
+     '#wysiwyg' => FALSE,
    );
    return system_settings_form($form);
  }
- 
- 
+
