@@ -303,35 +303,12 @@ function securepages_url($path = NULL, $options = array()) {
     'prefix' => '',
     'secure' => TRUE,
   );
-  if (!isset($options['external'])) {
-    // Return an external link if $path contains an allowed absolute URL.
-    // Only call the slow filter_xss_bad_protocol if $path contains a ':' before
-    // any / ? or #.
-    $colonpos = strpos($path, ':');
-    $options['external'] = function_exists('filter_xss_bad_protocol') ? ($colonpos !== FALSE && !preg_match('![/?#]!', substr($path, 0, $colonpos)) && filter_xss_bad_protocol($path, FALSE) == check_plain($path)) : ($colonpos !== FALSE && !preg_match('![/?#]!', substr($path, 0, $colonpos)));
-  }
 
   if ($options['fragment']) {
     $options['fragment'] = '#'. $options['fragment'];
   }
   if (is_array($options['query'])) {
     $options['query'] = drupal_query_string_encode($options['query']);
-  }
-
-  if ($options['external']) {
-    // Split off the fragment.
-    if (strpos($path, '#') !== FALSE) {
-      list($path, $old_fragment) = explode('#', $path, 2);
-      if (isset($old_fragment) && !$options['fragment']) {
-        $options['fragment'] = '#'. $old_fragment;
-      }
-    }
-    // Append the query.
-    if ($options['query']) {
-      $path .= (strpos($path, '?') !== FALSE ? '&' : '?') . $options['query'];
-    }
-    // Reassemble.
-    return $path . $options['fragment'];
   }
 
   global $base_url;
