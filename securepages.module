@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Provide method of creating allowing certain pages to only viewable from
