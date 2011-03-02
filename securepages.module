@@ -151,6 +151,7 @@ function securepages_goto($secure) {
   $url['https'] = $secure;
   $url['base_url'] = securepages_baseurl($secure);
   $url['absolute'] = TRUE;
+  $url['external'] = FALSE; // prevent an open redirect
 
   // Check for the overlay.  Attempting to switch protocols during an XHR
   // isn't allowed by the browser's same-origin policy, so we must close the overlay.

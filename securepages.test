@@ -31,6 +31,7 @@ class SecurePagesTestCase extends DrupalWebTestCase {
     $this->_testFormAlter();
     $this->_testCachedResponse();
     $this->_testPathAlias();
+    $this->_testOpenRedirect();
   }
 
   /**
@@ -206,6 +207,29 @@ class SecurePagesTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Verifies that securepages is not an open redirect.
+   */
+  function _testOpenRedirect() {
+    // Short-circuit redirects within the simpletest browser.
+    variable_set('simpletest_maximum_redirects', 0);
+    variable_set('securepages_switch', TRUE);
+
+    global $base_url, $base_path;
+    $secure_base_url = str_replace('http', 'https', $base_url);
+    $this->drupalGet($secure_base_url . $base_path . '?q=http://example.com/', array('external' => TRUE));
+    $this->assertResponse(302);
+    $this->assertTrue(strstr($this->drupalGetHeader('Location'), $base_url), t('Open redirect test passed.'));
+
+    $this->drupalGet($secure_base_url . $base_path . '?q=' . urlencode('http://example.com/'), array('external' => TRUE));
+    $this->assertResponse(302);
+    $this->assertTrue(strstr($this->drupalGetHeader('Location'), $base_url), t('Open redirect test passed.'));
+
+    // Clean up
+    variable_del('simpletest_maximum_redirects');
+    variable_del('securepages_switch');
+  }
+
+  /**
    * Logs in a user using HTTPS.
    */
   function loginHTTPS($user) {
@@ -215,4 +239,5 @@ class SecurePagesTestCase extends DrupalWebTestCase {
     );
     $this->drupalPost('user', $edit, t('Log in'), array('https' => TRUE));
   }
+
 }
