@@ -255,7 +255,7 @@ function securepages_test() {
  */
 function securepages_is_secure() {
   foreach (variable_get('securepages_ssl_checks', array('HTTPS' => 'on', 'HTTPS' => '1', 'HTTP_X_FORWARDED_PROTO' => 'https')) as $key => $value) {
-    if ($_SERVER[$key] == $value) {
+    if (isset($_SERVER[$key]) && $_SERVER[$key] == $value) {
       return $TRUE;
     }
   }
