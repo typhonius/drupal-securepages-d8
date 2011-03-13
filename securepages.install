@@ -22,6 +22,7 @@ function securepages_uninstall() {
   variable_del('securepages_ignore');
   variable_del('securepages_basepath');
   variable_del('securepages_basepath_ssl');
+  variable_del('securepages_ssl_checks');
 }
 
 /**
