@@ -71,4 +71,3 @@ function securepages_settings_submit() {
   // The page cache needs to be cleared, since cached redirects may be stale after changing securepages settings.
   cache_clear_all('*', 'cache_page', TRUE);
 }
-
