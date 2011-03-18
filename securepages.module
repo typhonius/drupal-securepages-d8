@@ -254,8 +254,11 @@ function securepages_test() {
  * Check if the current page is SSL
  */
 function securepages_is_secure() {
-  foreach (variable_get('securepages_ssl_checks', array('HTTPS' => 'on', 'HTTPS' => '1', 'HTTP_X_FORWARDED_PROTO' => 'https')) as $key => $value) {
-    if (isset($_SERVER[$key]) && $_SERVER[$key] == $value) {
+  foreach (variable_get('securepages_ssl_checks', array('HTTPS' => array('on', '1'), 'HTTP_X_FORWARDED_PROTO' => 'https')) as $key => $value) {
+    if (isset($_SERVER[$key]) && is_array($value) && in_array($_SERVER[$key], $value)) {
+      return TRUE;
+    }
+    elseif (isset($_SERVER[$key]) && $_SERVER[$key] == $value) {
       return $TRUE;
     }
   }
