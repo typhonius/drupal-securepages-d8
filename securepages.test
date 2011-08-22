@@ -54,11 +54,12 @@ class SecurePagesTestCase extends DrupalWebTestCase {
    * Tests the securepages_match() function.
    */
   function _testMatch() {
+    global $is_https;
     $this->assertTrue(securepages_match('user'), 'path user matches.');
     $this->assertTrue(securepages_match('user/login'), 'path user/login matches.');
     $this->assertTrue(securepages_match('admin/modules'), 'path admin/modules matches.');
     $this->assertFalse(securepages_match('node'), 'path node does not match.');
-    $this->assertTrue(securepages_match('user/autocomplete/alice') == securepages_is_secure() ? 1 : 0, 'autocomplete path is ignored.');
+    $this->assertTrue(securepages_match('user/autocomplete/alice') == $is_https ? 1 : 0, 'autocomplete path is ignored.');
   }
 
   /**
