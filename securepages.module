@@ -22,7 +22,8 @@ admin/*'
 define('SECUREPAGES_IGNORE',
 '*/autocomplete/*
 */ajax/*
-batch'
+batch
+js/*'
 );
 
 /**
