@@ -32,7 +32,7 @@ js/*'
 function securepages_init() {
   global $is_https;
   // Special path for verifying SSL status.
-  if ($_GET['q'] == 'admin/structure/securepages/test') {
+  if ($_GET['q'] == 'admin/config/system/securepages/test') {
     if ($is_https) {
       header('HTTP/1.1 200 OK');
     }
@@ -53,7 +53,7 @@ function securepages_init() {
 function securepages_menu() {
   $items = array();
 
-  $items['admin/structure/securepages'] = array(
+  $items['admin/config/system/securepages'] = array(
     'title' => 'Secure Pages',
     'description' => 'Configure which pages are and are not to be viewed in SSL',
     'page callback' => 'drupal_get_form',
@@ -230,7 +230,7 @@ function securepages_test() {
   if ($is_https) {
     return TRUE;
   }
-  $url = 'https://' . preg_replace(';^http[s]?://;s', '', url('admin/structure/securepages/test', array('absolute' => TRUE)));
+  $url = 'https://' . preg_replace(';^http[s]?://;s', '', url('admin/config/system/securepages/test', array('absolute' => TRUE)));
 
   $response = drupal_http_request($url);
 

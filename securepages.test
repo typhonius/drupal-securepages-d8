@@ -45,7 +45,7 @@ class SecurePagesTestCase extends DrupalWebTestCase {
     $this->web_user = $this->drupalCreateUser(array('administer site configuration', 'access administration pages'));
     $this->loginHTTPS($this->web_user);
     $edit = array('securepages_enable' => 1);
-    $this->drupalPost('admin/structure/securepages', $edit, t('Save configuration'), array('https' => TRUE));
+    $this->drupalPost('admin/config/system/securepages', $edit, t('Save configuration'), array('https' => TRUE));
     $this->assertRaw(t('The configuration options have been saved.'));
     $this->drupalLogout();
   }
