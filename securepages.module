@@ -150,8 +150,10 @@ function securepages_redirect() {
  *  Determine which version of the set to move to.
  */
 function securepages_goto($secure) {
-  $url = substr(request_uri(), strlen(base_path()));
-  $url = drupal_parse_url($url);
+
+  $url['path'] = drupal_is_front_page() ? '' : $_GET['q'];
+  $url['query'] = $_GET;
+  unset($url['query']['q']);
   $url['https'] = $secure;
   $url['base_url'] = securepages_baseurl($secure);
   $url['absolute'] = TRUE;

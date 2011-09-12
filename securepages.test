@@ -15,7 +15,7 @@ class SecurePagesTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('securepages', 'comment');
+    parent::setUp('securepages', 'comment', 'locale');
     variable_set('https', TRUE);
     variable_set('securepages_enable', TRUE);
   }
@@ -27,6 +27,7 @@ class SecurePagesTestCase extends DrupalWebTestCase {
   function testSecurePages() {
     $this->_testSettingsForm();
     $this->_testMatch();
+    $this->_testLocale();
     $this->_testAnonymous();
     $this->_testFormAlter();
     $this->_testCachedResponse();
@@ -64,6 +65,45 @@ class SecurePagesTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Tests correct operation with locale module.
+   */
+  function _testLocale() {
+    // Enable "Switch back to http pages when there are no matches".
+    variable_set('securepages_switch', TRUE);
+
+    // User to add and remove language.
+    $admin_user = $this->drupalCreateUser(array('administer languages', 'access administration pages'));
+    $this->drupalLogin($admin_user);
+
+    // Add predefined language.
+    $edit = array(
+      'langcode' => 'fr',
+    );
+    $this->drupalPost('admin/config/regional/language/add', $edit, t('Add language'));
+    $this->assertText('fr', t('Language added successfully.'));
+
+    // Enable URL language detection and selection.
+    $edit = array('language[enabled][locale-url]' => '1');
+    $this->drupalPost('admin/config/regional/language/configure', $edit, t('Save settings'));
+
+    drupal_static_reset('language_list');
+    drupal_static_reset('locale_url_outbound_alter');
+    $languages = language_list('language');
+    $lang = $languages['fr'];
+    $this->drupalGet('user', array('language' => $lang));
+    $this->assertResponse(200);
+    $this->assertUrl(url('user', array('https' => TRUE, 'absolute' => TRUE, 'language' => $lang)));
+    $this->assertTrue(strstr($this->url, '/fr/'), t('URL contains language prefix.'));
+
+    $this->drupalGet('', array('language' => $lang, 'https' => TRUE));
+    $this->assertResponse(200);
+    $this->assertUrl(url('', array('https' => FALSE, 'absolute' => TRUE, 'language' => $lang)));
+
+    // Clean up
+    variable_del('securepages_switch');
+  }
+
+  /**
    * Tests for anonymous browsing with securepages.
    */
   function _testAnonymous() {
@@ -97,7 +137,7 @@ class SecurePagesTestCase extends DrupalWebTestCase {
     $this->assertUrl(url('', array('https' => FALSE, 'absolute' => TRUE)));
     $this->drupalGet('node', array('https' => TRUE));
     $this->assertResponse(200);
-    $this->assertUrl(url('node', array('https' => FALSE, 'absolute' => TRUE)));
+    $this->assertUrl(url('', array('https' => FALSE, 'absolute' => TRUE)));
 
     // Clean up
     variable_del('securepages_pages');
