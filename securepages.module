@@ -40,9 +40,7 @@ function securepages_init() {
   }
 
   if (variable_get('securepages_enable', 0) && basename($_SERVER['PHP_SELF']) == 'index.php' && php_sapi_name() != 'cli') {
-    if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || $_SERVER['HTTP_X_REQUESTED_WITH'] != 'XMLHttpRequest') {
-      securepages_redirect();
-    }
+    securepages_redirect();
   }
 }
 
@@ -161,9 +159,11 @@ function securepages_goto($secure) {
 
   // Check for the overlay.  Attempting to switch protocols during an XHR
   // isn't allowed by the browser's same-origin policy, so we must close the overlay.
-  if (isset($url['query']['render']) && $url['query']['render'] == 'overlay') {
-    unset($url['query']['render']);
+  if (module_exists('overlay') && overlay_get_mode() == 'child') {
     overlay_close_dialog($url['path'], $url);
+  }
+  else if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
+    return;
   }
   else {
     // Setting the redirect headers manually allows them to be cached.
