@@ -22,7 +22,7 @@ class SecurePagesTestCase extends DrupalWebTestCase {
 
   /**
    * Runs all the test functions.  These are run from a single outer function to avoid
-	 * multiple re-installs by simpletest.
+   * multiple re-installs by simpletest.
    */
   function testSecurePages() {
     $this->_testSettingsForm();
@@ -34,6 +34,7 @@ class SecurePagesTestCase extends DrupalWebTestCase {
     $this->_testPathAlias();
     $this->_testOpenRedirect();
     $this->_testXHR();
+    $this->_testRoles();
   }
 
   /**
@@ -41,7 +42,7 @@ class SecurePagesTestCase extends DrupalWebTestCase {
    */
   function _testSettingsForm() {
     // Undo the setUp() function.
-    variable_del('securepages');
+    variable_del('securepages_enable');
 
     // Enable securepages.
     $this->web_user = $this->drupalCreateUser(array('administer site configuration', 'access administration pages'));
@@ -301,6 +302,45 @@ class SecurePagesTestCase extends DrupalWebTestCase {
     $this->assertRaw('"closeOverlay":true');
 
     // Clean up
+    $this->drupalLogout();
+  }
+
+  /**
+   * Test role-based switching.
+   */
+  function _testRoles() {
+    // Undo the setUp() function.
+    variable_del('securepages');
+
+    // Enable securepages.
+    $this->web_user = $this->drupalCreateUser(array('administer site configuration', 'access administration pages', 'access comments', 'post comments'));
+
+    // Extract the role that was just generated.
+    $role = $this->web_user->roles;
+    unset($role[DRUPAL_AUTHENTICATED_RID]);
+    $role = current($role);
+
+    $this->loginHTTPS($this->web_user);
+    $edit = array('securepages_enable' => 1, 'securepages_switch' => 1, "securepages_roles[$role]" => 1);
+    $this->drupalPost('admin/config/system/securepages', $edit, t('Save configuration'), array('https' => TRUE));
+    $this->assertRaw(t('The configuration options have been saved.'));
+
+    // Visit the home page and /node with HTTPS and confirm that redirection happens.
+    $this->drupalGet('', array('https' => FALSE));
+    $this->assertResponse(200);
+    $this->assertUrl(url('', array('https' => TRUE, 'absolute' => TRUE)));
+    $this->drupalGet('node', array('https' => FALSE));
+    $this->assertResponse(200);
+    $this->assertUrl(url('', array('https' => TRUE, 'absolute' => TRUE)));
+
+    // Test that forms actions aren't switched back to http.
+    $node = $this->drupalCreateNode(array('type' => 'article', 'promote' => 1));
+    $this->drupalGet('node/' . $node->nid, array('https' => TRUE));
+    $this->assertFieldByXPath('//form[@class="comment-form" and starts-with(@action, "https:")]', NULL, "The comment form action is https.");
+
+    // Clean up
+    variable_del('securepages_switch');
+    variable_del('securepages_roles');
     $this->drupalLogout();
   }
 

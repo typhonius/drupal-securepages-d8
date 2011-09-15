@@ -67,7 +67,7 @@ function securepages_menu() {
  * Implements hook_form_alter().
  */
 function securepages_form_alter(&$form, &$form_state, $form_id) {
-  global $is_https;
+  global $is_https, $user;
   if (!variable_get('securepages_enable', 0)) {
     return;
   }
@@ -79,6 +79,12 @@ function securepages_form_alter(&$form, &$form_state, $form_id) {
     $path = drupal_get_normal_path($url['path']);
 
     $page_match = securepages_match($path);
+    $role_match = securepages_roles($user);
+    if ($role_match) {
+      $form['#https'] = TRUE;
+      return;
+    }
+
     if ($page_match && !$is_https) {
       $form['#https'] = TRUE;
     }
@@ -99,11 +105,11 @@ function securepages_form_alter(&$form, &$form_state, $form_id) {
  * Implements hook_drupal_goto_alter().
  */
 function securepages_drupal_goto_alter(&$path, &$options, &$http_response_code) {
-  global $is_https;
+  global $is_https, $user;
   if (!variable_get('securepages_enable', 0)) {
     return;
   }
-  if (securepages_match($path)) {
+  if (securepages_match($path) || securepages_roles($user)) {
     if (!$is_https) {
       $options['https'] = TRUE;
     }
@@ -118,18 +124,21 @@ function securepages_drupal_goto_alter(&$path, &$options, &$http_response_code) 
  * insecure version of the page.
  */
 function securepages_redirect() {
-  global $base_url;
-  global $is_https;
+  global $base_url, $is_https, $user;
   $path = isset($_GET['q']) ? $_GET['q'] : '';
   $page_match = securepages_match($path);
+  $role_match = securepages_roles($user);
 
   if ($_POST) {
     // If something has been posted to here then ignore the rules.
   }
+  elseif ($role_match && !$is_https) {
+    securepages_goto(TRUE);
+  }
   elseif ($page_match && !$is_https) {
     securepages_goto(TRUE);
   }
-  elseif ($page_match === 0 && $is_https && variable_get('securepages_switch', FALSE)) {
+  elseif ($page_match === 0 && $is_https && variable_get('securepages_switch', FALSE) && !$role_match) {
     securepages_goto(FALSE);
   }
 
@@ -220,6 +229,25 @@ function securepages_match($path) {
   else {
     return;
   }
+}
+
+/**
+ * Check if the user is in a role that is always forced onto https.
+ *
+ * @param $account
+ *   A valid user object.
+ *
+ * @return
+ *   The number of roles set on the user that require https enforcing.
+ */
+function securepages_roles($account) {
+  // All rids are in the settings, so first we need to filter out the ones
+  // that aren't enabled. Otherwise this would match positive against all
+  // roles a user has set.
+
+  $roles = array_filter(variable_get('securepages_roles', array()));
+  $matches = array_intersect_key($account->roles, $roles);
+  return count($matches);
 }
 
 /**
