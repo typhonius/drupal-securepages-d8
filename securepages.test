@@ -21,8 +21,8 @@ class SecurePagesTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Runs all the test functions.  These are run from a single outer function to avoid
-   * multiple re-installs by simpletest.
+   * Runs all the test functions. These are run from a single outer function to
+   * avoid multiple re-installs by simpletest.
    */
   function testSecurePages() {
     $this->_testSettingsForm();
@@ -38,7 +38,7 @@ class SecurePagesTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Test submitting the settings form
+   * Test submitting the settings form.
    */
   function _testSettingsForm() {
     // Undo the setUp() function.
@@ -280,7 +280,7 @@ class SecurePagesTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Test detection of XHR and overlay requests
+   * Test detection of XHR and overlay requests.
    */
   function _testXHR() {
     $admin_user = $this->drupalCreateUser(array('access overlay', 'access user profiles', 'administer users', 'access administration pages'));

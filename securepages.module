@@ -2,12 +2,11 @@
 
 /**
  * @file
- * Provide method of creating allowing certain pages to only viewable from
- * https pages
+ * Allows certain pages to be viewable only via HTTPS.
  */
 
 /**
- * Defaults for securepages_pages and securepages_ignore.
+ * Defines defaults for SECUREPAGES_PAGES.
  */
 define('SECUREPAGES_PAGES',
 'node/add*
@@ -19,15 +18,17 @@ admin
 admin/*'
 );
 
-define('SECUREPAGES_IGNORE',
-''
-);
+/**
+ * Defines defaults for SECUREPAGES_IGNORE.
+ */
+define('SECUREPAGES_IGNORE', '');
 
 /**
  * Implements hook_init().
  */
 function securepages_init() {
   global $is_https;
+
   // Special path for verifying SSL status.
   if ($_GET['q'] == 'admin/config/system/securepages/test') {
     if ($is_https) {
@@ -68,6 +69,7 @@ function securepages_menu() {
  */
 function securepages_form_alter(&$form, &$form_state, $form_id) {
   global $is_https, $user;
+
   if (!variable_get('securepages_enable', 0)) {
     return;
   }
@@ -106,6 +108,7 @@ function securepages_form_alter(&$form, &$form_state, $form_id) {
  */
 function securepages_drupal_goto_alter(&$path, &$options, &$http_response_code) {
   global $is_https, $user;
+
   if (!variable_get('securepages_enable', 0)) {
     return;
   }
@@ -120,11 +123,12 @@ function securepages_drupal_goto_alter(&$path, &$options, &$http_response_code) 
 }
 
 /**
- * Check the current page and see if we need to redirect to the secure or
+ * Checks the current page and see if we need to redirect to the secure or
  * insecure version of the page.
  */
 function securepages_redirect() {
   global $base_url, $is_https, $user;
+
   $path = isset($_GET['q']) ? $_GET['q'] : '';
   $page_match = securepages_match($path);
   $role_match = securepages_roles($user);
@@ -142,19 +146,17 @@ function securepages_redirect() {
     securepages_goto(FALSE);
   }
 
-  // Correct the base_url so that everything comes from https.
+  // Correct the base_url so that everything comes from HTTPS.
   if ($is_https) {
     $base_url = securepages_baseurl();
   }
 }
 
 /**
- * securepage_goto()
- *
  * Redirects the current page to the secure or insecure version.
  *
  * @param $secure
- *  Determine which version of the set to move to.
+ *   Determines which version of the set to move to.
  */
 function securepages_goto($secure) {
 
@@ -171,7 +173,7 @@ function securepages_goto($secure) {
   if (module_exists('overlay') && overlay_get_mode() == 'child') {
     overlay_close_dialog($url['path'], $url);
   }
-  else if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
+  elseif (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
     return;
   }
   else {
@@ -192,27 +194,24 @@ function securepages_goto($secure) {
 }
 
 /**
- * securepages_match()
- *
- * check the page past and see if it should be secure or insecure.
+ * Checks the page past and see if it should be secure or insecure.
  *
  * @param $path
- *  the page of the page to check.
+ *   The page of the page to check.
  *
  * @return
- *  0 - page should be insecure.
- *  1 - page should be secure.
- *  NULL - do not change page.
+ *   - 0: Page should be insecure.
+ *   - 1: Page should be secure.
+ *   - NULL: Do not change page.
  */
 function securepages_match($path) {
-  /**
-   * Check to see if the page matches the current settings
-   */
   global $is_https;
+
   $secure = variable_get('securepages_secure', 1);
   $pages = variable_get('securepages_pages', SECUREPAGES_PAGES);
   $ignore = variable_get('securepages_ignore', SECUREPAGES_IGNORE);
 
+  // Checks to see if the page matches the current settings.
   if ($ignore) {
     if (drupal_match_path($path, $ignore)) {
       return $is_https ? 1 : 0;
@@ -232,13 +231,13 @@ function securepages_match($path) {
 }
 
 /**
- * Check if the user is in a role that is always forced onto https.
+ * Checks if the user is in a role that is always forced onto HTTPS.
  *
  * @param $account
  *   A valid user object.
  *
  * @return
- *   The number of roles set on the user that require https enforcing.
+ *   The number of roles set on the user that require HTTPS enforcing.
  */
 function securepages_roles($account) {
   // All rids are in the settings, so first we need to filter out the ones
@@ -251,10 +250,11 @@ function securepages_roles($account) {
 }
 
 /**
- * Secure Pages SSL Test
+ * Secure Pages SSL Test.
  */
 function securepages_test() {
   global $is_https;
+
   // If we are in an SSL page then assume that SSL is configured correctly.
   if ($is_https) {
     return TRUE;
@@ -267,7 +267,7 @@ function securepages_test() {
 }
 
 /**
- * Return the secure base path
+ * Returns the secure base path.
  */
 function securepages_baseurl($secure = TRUE) {
   global $base_url;
@@ -288,7 +288,10 @@ function securepages_baseurl($secure = TRUE) {
 }
 
 /**
- * Check the url and make sure that it is a url that can be altered.
+ * Checks the URL to make sure it is a URL that can be altered.
+ *
+ * @param $url
+ *   URL to check.
  */
 function securepages_can_alter_url($url) {
   global $base_path, $base_url;
