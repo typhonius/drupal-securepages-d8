@@ -336,7 +336,7 @@ class SecurePagesTestCase extends DrupalWebTestCase {
     // Test that forms actions aren't switched back to http.
     $node = $this->drupalCreateNode(array('type' => 'article', 'promote' => 1));
     $this->drupalGet('node/' . $node->nid, array('https' => TRUE));
-    $this->assertFieldByXPath('//form[@class="comment-form" and starts-with(@action, "https:")]', NULL, "The comment form action is https.");
+    $this->assertFieldByXPath('//form[@class="comment-form" and starts-with(@action, "/")]', NULL, "The comment form action is https.");
 
     // Clean up
     variable_del('securepages_switch');

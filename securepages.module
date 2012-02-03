@@ -83,7 +83,9 @@ function securepages_form_alter(&$form, &$form_state, $form_id) {
     $page_match = securepages_match($path);
     $role_match = securepages_roles($user);
     if ($role_match) {
-      $form['#https'] = TRUE;
+      if (!$is_https) {
+        $form['#https'] = TRUE;
+      }
       return;
     }
 
