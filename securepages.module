@@ -221,7 +221,12 @@ function securepages_match($path) {
 
   // Checks to see if the page matches the current settings.
   if ($ignore) {
-    if (drupal_match_path($path, $ignore)) {
+    $result = drupal_match_path($path, $ignore);
+    if (!$result && function_exists('drupal_get_path_alias')) {
+      $path_alias = drupal_get_path_alias($path);
+      $result = drupal_match_path($path_alias, $ignore);
+    }
+    if ($result) {
       securepages_log('Ignored path (Path: "@path", Line: @line, Pattern: "@pattern")', $path, $ignore);
       return $is_https ? 1 : 0;
     }
