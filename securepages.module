@@ -233,9 +233,9 @@ function securepages_match($path) {
   }
   if ($pages) {
     $result = drupal_match_path($path, $pages);
-    if (function_exists('drupal_get_path_alias')) {
+    if (!$result && function_exists('drupal_get_path_alias')) {
       $path_alias = drupal_get_path_alias($path);
-      $result |= drupal_match_path($path_alias, $pages);
+      $result = drupal_match_path($path_alias, $pages);
     }
     if (!($secure xor $result)) {
       securepages_log('Secure path (Path: "@path", Line: @line, Pattern: "@pattern")', $path, $pages);
