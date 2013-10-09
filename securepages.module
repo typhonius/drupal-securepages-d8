@@ -219,6 +219,8 @@ function securepages_match($path) {
   $pages = variable_get('securepages_pages', SECUREPAGES_PAGES);
   $ignore = variable_get('securepages_ignore', SECUREPAGES_IGNORE);
 
+  $path_alias = NULL;
+
   // Checks to see if the page matches the current settings.
   if ($ignore) {
     $result = drupal_match_path($path, $ignore);
@@ -234,7 +236,7 @@ function securepages_match($path) {
   if ($pages) {
     $result = drupal_match_path($path, $pages);
     if (!$result && function_exists('drupal_get_path_alias')) {
-      $path_alias = drupal_get_path_alias($path);
+      $path_alias = isset($path_alias) ? drupal_get_path_alias($path) : $path_alias;
       $result = drupal_match_path($path_alias, $pages);
     }
     if (!($secure xor $result)) {
