@@ -76,7 +76,7 @@ function securepages_form_alter(&$form, &$form_state, $form_id) {
 
   if (isset($form['#action']) && securepages_can_alter_url($form['#action'])) {
     // Remove the base_path, and extract the path component.
-    $url = substr($form['#action'], strlen(base_path()));
+    $url = substr(rawurldecode($form['#action']), strlen(base_path()));
     $url = drupal_parse_url($url);
     $path = drupal_get_normal_path($url['path']);
 
