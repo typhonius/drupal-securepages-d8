@@ -24,6 +24,12 @@ admin/*'
 define('SECUREPAGES_IGNORE', '');
 
 /**
+ * Defines defaults for SECUREPAGES_FORMS.
+ */
+define('SECUREPAGES_FORMS', 'user_login
+user_login_block');
+
+/**
  * Implements hook_init().
  */
 function securepages_init() {
@@ -102,8 +108,9 @@ function securepages_form_alter(&$form, &$form_state, $form_id) {
     }
   }
 
-  // If the user/login block matches, also secure the login block.
-  if (securepages_match('user/login') && $form_id == 'user_login_block' && !$is_https) {
+  // Check to see if this form needs to be secured.
+  $secure_form = securepages_match_form($form_id, $form_state['build_info']['args']);
+  if (!$is_https && $secure_form) {
     $form['#https'] = TRUE;
   }
 }
@@ -334,10 +341,38 @@ function securepages_can_alter_url($url) {
   return TRUE;
 }
 
+/**
+ * Check form Id to see if this form should be secured.
+ */
+function securepages_match_form($form_id, $args = array()) {
+  $forms = & drupal_static(__FUNCTION__);
+  if (drupal_match_path($form_id, variable_get('securepages_forms', SECUREPAGES_FORMS))) {
+    securepages_log('Secure Form (Form: "@path", Line: @line, Pattern: "@pattern")', $form_id, variable_get('securepages_forms', SECUREPAGES_FORMS));
+    return TRUE;
+  }
+
+  if (!isset($forms)) {
+    $forms = module_invoke_all('forms', $form_id, $args);
+  }
+
+  if (isset($forms[$form_id])) {
+    $form_definition = $forms[$form_id];
+
+    if (drupal_match_path($form_definition['callback'], variable_get('securepages_forms', SECUREPAGES_FORMS))) {
+      securepages_log('Secure Form (Path: "@path", Line: @line, Pattern: "@pattern")', $form_definition['callback'], variable_get('securepages_forms', SECUREPAGES_FORMS));
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 function securepages_log($text, $path, $pattern = NULL) {
   if (variable_get('securepages_debug', 0)) {
     $options = array(
       '@path' => $path,
+      '@line' => t('NF'),
+      '@pattern' => '',
     );
     if ($pattern) {
       if (!drupal_match_path($path, $pattern) && function_exists('drupal_get_path_alias')) {
