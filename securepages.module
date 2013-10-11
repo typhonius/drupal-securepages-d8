@@ -74,7 +74,7 @@ function securepages_menu() {
  * Implements hook_form_alter().
  */
 function securepages_form_alter(&$form, &$form_state, $form_id) {
-  global $is_https, $user;
+  global $is_https, $user, $language;
 
   if (!variable_get('securepages_enable', 0)) {
     return;
@@ -83,6 +83,13 @@ function securepages_form_alter(&$form, &$form_state, $form_id) {
   if (isset($form['#action']) && securepages_can_alter_url($form['#action'])) {
     // Remove the base_path, and extract the path component.
     $url = substr(rawurldecode($form['#action']), strlen(base_path()));
+
+    // Filter out any language prefixes as it will be automatically added to
+    // the URL again.
+    if (!empty($language->prefix) && preg_match('/^' . $language->prefix . '/', $url) > 0) {
+      $url = preg_replace('/^' . $language->prefix . '\//', '', $url);
+    }
+
     $url = drupal_parse_url($url);
     $path = drupal_get_normal_path($url['path']);
 
