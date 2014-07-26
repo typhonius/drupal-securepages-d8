@@ -1,0 +1,10 @@
+enable: FALSE
+secure: 1
+ignore: ''
+switch: FALSE
+basepath: ''
+basepath_ssl: ''
+pages: "node/add*\nnode/*/edit\nnode/*/delete\nuser\nuser/*\nadmin\nadmin/*"
+roles: []
+forms: "user_login\nuser_login_block"
+debug: 0

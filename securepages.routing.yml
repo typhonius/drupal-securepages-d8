@@ -1,0 +1,15 @@
+securepages.settings:
+  path: /admin/config/system/securepages
+  defaults:
+    _form: '\Drupal\securepages\Form\SecurepagesSettingsForm'
+  requirements:
+    _permission: 'administer site configuration'
+securepages.test:
+  path: /admin/config/system/securepages/test
+  defaults:
+    _controller: '\Drupal\securepages\Controller\SecurepagesController::testPage'
+  requirements:
+    _access: 'TRUE'
+  options:
+    _admin_route: FALSE
+
